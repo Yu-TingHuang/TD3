@@ -143,14 +143,14 @@ if __name__ == "__main__":
 
 		# Train agent after collecting sufficient data
 		if t >= args.start_timesteps:
-            warmup = (math.floor(np.power(1 + 1e-5, t)))
-            if (args.optimizer == 'SGLD' and args.two_player):
-                kt = np.minimum(15, warmup)
-			else:
-				Kt = 1
-			for k in range(kt):
-				sgld_outer_update = (k == kt - 1)
-				policy.train(sgld_outer_update, replay_buffer, args.batch_size)
+                    warmup = (math.floor(np.power(1 + 1e-5, t)))
+                    if (args.optimizer == 'SGLD' and args.two_player):
+                        kt = np.minimum(15, warmup) 
+                    else:
+                        Kt = 1
+                    for k in range(kt):
+                        sgld_outer_update = (k == kt - 1)
+                        policy.train(sgld_outer_update, replay_buffer, args.batch_size)
 
 		if done:
 			# +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True

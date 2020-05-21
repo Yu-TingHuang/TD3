@@ -95,25 +95,24 @@ class TD3(object):
 
 	):
 
-		self.actor = Actor(state_dim, action_dim, max_action).to(device)
-		self.actor_target = copy.deepcopy(self.actor)
-		self.actor_bar = copy.deepcopy(self.actor)
-		self.actor_outer = copy.deepcopy(self.actor)
+                self.actor = Actor(state_dim, action_dim, max_action).to(device)
+                self.actor_target = copy.deepcopy(self.actor)
+                self.actor_bar = copy.deepcopy(self.actor)
+                self.actor_outer = copy.deepcopy(self.actor)
 
-		self.adversary = Actor(state_dim, action_dim, max_action).to(device)
-		self.adversary_target = copy.deepcopy(self.actor)
-		self.adversary_bar = copy.deepcopy(self.actor)
-		self.adversary_outer = copy.deepcopy(self.actor)
-
-        if(optimizer == 'SGLD'):
-            self.actor_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
-			self.adversary_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
-        elif(optimizer == 'RMSprop'):
-            self.actor_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
-			self.adversary_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
-        else:
-            self.actor_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
-            self.adversary_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
+                self.adversary = Actor(state_dim, action_dim, max_action).to(device)
+                self.adversary_target = copy.deepcopy(self.actor)
+                self.adversary_bar = copy.deepcopy(self.actor)
+                self.adversary_outer = copy.deepcopy(self.actor)
+                if(optimizer == 'SGLD'):
+                    self.actor_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
+		    self.adversary_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
+                elif(optimizer == 'RMSprop'):
+                    self.actor_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
+                    self.adversary_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
+                else:
+                    self.actor_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
+                    self.adversary_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
 
 		self.critic = Critic(state_dim, action_dim).to(device)
 		self.critic_target = copy.deepcopy(self.critic)
@@ -134,24 +133,22 @@ class TD3(object):
 		self.optimizer = optimizer
 		self.two_player = two_player
 
-	def select_action(self, state):
-		state = torch.FloatTensor(state.reshape(1, -1)).to(device)
-        if(self.optimizer == 'SGLD' and self.two_player):
-            mu = self.actor_outer(state).cpu().data.numpy().flatten()
-            adv_mu = self.adversary_outer(state).cpu().data.numpy().flatten()
-        else:
-            mu = self.actor(state).cpu().data.numpy().flatten()
-            adv_mu = self.adversary(state).cpu().data.numpy().flatten()
+	def select_action(self, state):            
+            state = torch.FloatTensor(state.reshape(1, -1)).to(device)
+            if(self.optimizer == 'SGLD' and self.two_player):
+                mu = self.actor_outer(state).cpu().data.numpy().flatten()
+                adv_mu = self.adversary_outer(state).cpu().data.numpy().flatten()
+            else:
+                mu = self.actor(state).cpu().data.numpy().flatten()
+                adv_mu = self.adversary(state).cpu().data.numpy().flatten()
 
-		mu = (mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim))
-			.clip(-self.max_action, self.max_action)
-		adv_mu = (adv_mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim))
-				.clip(-self.max_action, self.max_action)
-		mu = mu * (1 - self.alpha)
-		adv_mu = adv_mu * self.alpha
+            mu = (mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim)).clip(-self.max_action, self.max_action)
+	    adv_mu = (adv_mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim)).clip(-self.max_action, self.max_action)
+            mu = mu * (1 - self.alpha)
+            adv_mu = adv_mu * self.alpha
 
-		action = mu + adv_mu
-		return action
+            action = mu + adv_mu
+            return action
 
 	def train(self, sgld_outer_update, replay_buffer, batch_size=100):
 
