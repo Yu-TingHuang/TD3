@@ -16,55 +16,51 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action):
-    　　　　super(Actor, self).__init__()
-    　　　　
-    　　　　self.l1 = nn.Linear(state_dim, 256)
-    　　　　self.l2 = nn.Linear(256, 256)
-    　　　　self.l3 = nn.Linear(256, action_dim)
-    　　　　
-    　　　　self.max_action = max_action
-　　　　def forward(self, state):
-　　　　　　　　a = F.relu(self.l1(state))
-　　　　　　　　a = F.relu(self.l2(a))
-　　　　　　　　return self.max_action * torch.tanh(self.l3(a))
+        super(Actor, self).__init__()
+    
+        self.l1 = nn.Linear(state_dim, 256)
+        self.l2 = nn.Linear(256, 256)
+        self.l3 = nn.Linear(256, action_dim)
+    
+        self.max_action = max_action
+    def forward(self, state):
+        a = F.relu(self.l1(state))
+        a = F.relu(self.l2(a))
+        return self.max_action * torch.tanh(self.l3(a))
 
 
 class Critic(nn.Module):
-　　　　def __init__(self, state_dim, action_dim):
-　　　　　　　　super(Critic, self).__init__()
-　　　　　　　　
-　　　　　　　　# Q1 architecture
-　　　　　　　　self.l1 = nn.Linear(state_dim + action_dim, 256)
-　　　　　　　　self.l2 = nn.Linear(256, 256)
-　　　　　　　　self.l3 = nn.Linear(256, 1)
-　　　　　　　　
-　　　　　　　　# Q2 architecture
-　　　　　　　　self.l4 = nn.Linear(state_dim + action_dim, 256)
-　　　　　　　　self.l5 = nn.Linear(256, 256)
-　　　　　　　　self.l6 = nn.Linear(256, 1)
-　　　　
-　　　　
-　　　　def forward(self, state, action):
-　　　　　　　　sa = torch.cat([state, action], 1)
-　　　　　　　　
-　　　　　　　　q1 = F.relu(self.l1(sa))
-　　　　　　　　q1 = F.relu(self.l2(q1))
-　　　　　　　　q1 = self.l3(q1)
-　　　　　　　　
-　　　　　　　　q2 = F.relu(self.l4(sa))
-　　　　　　　　q2 = F.relu(self.l5(q2))
-　　　　　　　　q2 = self.l6(q2)
-　　　　　　　　return q1, q2
-　　　　
-　　　　
-　　　　def Q1(self, state, action):
-　　　　　　　　sa = torch.cat([state, action], 1)
-　　　　　　　　
-　　　　　　　　q1 = F.relu(self.l1(sa))
-　　　　　　　　q1 = F.relu(self.l2(q1))
-　　　　　　　　q1 = self.l3(q1)
-　　　　　　　　return q1
-　　　　
+    def __init__(self, state_dim, action_dim):
+        super(Critic, self).__init__()
+        
+        # Q1 architecture
+        self.l1 = nn.Linear(state_dim + action_dim, 256)
+        self.l2 = nn.Linear(256, 256)
+        self.l3 = nn.Linear(256, 1)
+        # Q2 architecture
+        self.l4 = nn.Linear(state_dim + action_dim, 256)
+        self.l5 = nn.Linear(256, 256)
+        self.l6 = nn.Linear(256, 1)
+
+    def forward(self, state, action):
+        sa = torch.cat([state, action], 1)
+        q1 = F.relu(self.l1(sa))
+        q1 = F.relu(self.l2(q1))
+        q1 = self.l3(q1)
+
+        q2 = F.relu(self.l4(sa))
+        q2 = F.relu(self.l5(q2))
+        q2 = self.l6(q2) 
+        return q1, q2
+
+
+    def Q1(self, state, action):
+        sa = torch.cat([state, action], 1)
+        q1 = F.relu(self.l1(sa))
+        q1 = F.relu(self.l2(q1))
+        q1 = self.l3(q1)
+        return q1
+
 def soft_update(target, source, tau):
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
@@ -112,24 +108,24 @@ class TD3(object):
              self.actor_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
              self.adversary_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
 
-		self.critic = Critic(state_dim, action_dim).to(device)
-		self.critic_target = copy.deepcopy(self.critic)
-		self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
+         self.critic = Critic(state_dim, action_dim).to(device)
+         self.critic_target = copy.deepcopy(self.critic)
+         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
 
-		self.max_action = max_action
-		self.discount = discount
-		self.tau = tau
-		self.policy_noise = policy_noise
-		self.noise_clip = noise_clip
-		self.policy_freq = policy_freq
-		self.total_it = 0
+         self.max_action = max_action
+         self.discount = discount
+         self.tau = tau
+         self.policy_noise = policy_noise
+         self.noise_clip = noise_clip
+         self.policy_freq = policy_freq 
+         self.total_it = 0
 
-		self.expl_noise = expl_noise
-		self.action_dim = action_dim
-		self.alpha = alpha
-		self.beta = beta
-		self.optimizer = optimizer
-		self.two_player = two_player
+         self.expl_noise = expl_noise
+         self.action_dim = action_dim 
+         self.alpha = alpha
+         self.beta = beta
+         self.optimizer = optimizer
+         self.two_player = two_player
 
     def select_action(self, state):
         state = torch.FloatTensor(state.reshape(1, -1)).to(device)
@@ -148,35 +144,35 @@ class TD3(object):
         action = mu + adv_mu
         return action
 
-	def train(self, sgld_outer_update, replay_buffer, batch_size=100):
+    def train(self, sgld_outer_update, replay_buffer, batch_size=100):
 
         self.total_it += 1
 
-		# Sample replay buffer
+	# Sample replay buffer
         state, action, next_state, reward, not_done = replay_buffer.sample(batch_size)
 
         with torch.no_grad():
-			# Select action according to policy and add clipped noise
+            # Select action according to policy and add clipped noise
             noise = (torch.randn_like(action) * self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
             next_action = ((1 - self.alpha) * self.actor_target(next_state) + self.alpha * self.adversary_target(next_state) + noise).clamp(-self.max_action, self.max_action)
 
-			# Compute the target Q value
+	    # Compute the target Q value
             target_Q1, target_Q2 = self.critic_target(next_state, next_action)
             target_Q = torch.min(target_Q1, target_Q2)
             target_Q = reward + not_done * self.discount * target_Q
 
-		# Get current Q estimates
+        # Get current Q estimates
         current_Q1, current_Q2 = self.critic(state, action)
 
-		# Compute critic loss
+        # Compute critic loss
         critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
 
-		# Optimize the critic
+        # Optimize the critic
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
 
-		# Delayed policy updates
+        # Delayed policy updates
         if self.total_it % self.policy_freq == 0:
             with torch.no_grad():
                 if(self.optimizer == 'SGLD' and self.two_player):
