@@ -9,6 +9,7 @@ import TD3
 import OurDDPG
 import DDPG
 import ast
+import math
 
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
@@ -64,21 +65,21 @@ if __name__ == "__main__":
     print("---------------------------------------")
 
     if args.two_player:
-    	base_dir = os.getcwd() + '/models/' + args.env_name + '/'
+    	base_dir = os.getcwd() + '/models/' + args.env + '/'
     else:
-        base_dir = os.getcwd() + '/models_ˋ400x300/' + args.env_name + '/'
+        base_dir = os.getcwd() + '/models_OnePlayer/' + args.env + '/'
 
     if args.optimizer == 'SGLD':
         base_dir += args.optimizer + '_thermal_' + str(args.epsilon) + '/'
     else:
         base_dir += args.optimizer + '/'
 
-    if args.action_noise:
-        base_dir += 'action_noise_' + str(args.noise_scale) + '/'
-    else:
-        base_dir += 'no_noise/'
+   # if args.action_noise:
+  #      base_dir += 'action_noise_' + str(args.noise_scale) + '/'
+ #   else:
+#        base_dir += 'no_noise/'
 
-	run_number = 0
+    run_number = 0
     while os.path.exists(base_dir + str(run_number)):
         run_number += 1
     base_dir = base_dir + str(run_number)
@@ -178,6 +179,6 @@ if __name__ == "__main__":
             # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
             evaluations.append(eval_policy(policy, args.env, args.seed))
-            np.save(f"./{base_dir}/{results}", evaluations)
+            np.save(f"./{base_dir}/results", evaluations)
             if args.save_model:
-				save_model(actor=policy.actor, adversary=policy.adversary, basedir=base_dir)
+                save_model(actor=policy.actor, adversary=policy.adversary, basedir=base_dir)
