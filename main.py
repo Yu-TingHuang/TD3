@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print("---------------------------------------")
 
     if args.two_player:
-    	base_dir = os.getcwd() + '/models/' + args.env + '/'
+    	base_dir = os.getcwd() + '/models_TwoPlayer/' + args.env + '/'
     else:
         base_dir = os.getcwd() + '/models_OnePlayer/' + args.env + '/'
 
@@ -74,10 +74,9 @@ if __name__ == "__main__":
     else:
         base_dir += args.optimizer + '/'
 
-   # if args.action_noise:
-  #      base_dir += 'action_noise_' + str(args.noise_scale) + '/'
- #   else:
-#        base_dir += 'no_noise/'
+    base_dir += 'action_noise_' + str(args.expl_noise) + '/'
+
+	base_dir += 'alpha_' + str(alpha) + '/'
 
     run_number = 0
     while os.path.exists(base_dir + str(run_number)):
