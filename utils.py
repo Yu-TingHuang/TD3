@@ -38,3 +38,23 @@ class ReplayBuffer(object):
 			torch.FloatTensor(self.reward[ind]).to(self.device),
 			torch.FloatTensor(self.not_done[ind]).to(self.device)
 		)
+
+def save_model(actor, adversary, basedir=None):
+    if not os.path.exists('models/'):
+        os.makedirs('models/')
+
+    actor_path = "{}/ddpg_actor".format(basedir)
+    adversary_path = "{}/ddpg_adversary".format(basedir)
+
+    # print('Saving models to {} {}'.format(actor_path, adversary_path))
+    torch.save(actor.state_dict(), actor_path)
+    torch.save(adversary.state_dict(), adversary_path)
+
+
+def load_model(agent, basedir=None):
+    actor_path = "{}/ddpg_actor".format(basedir)
+    adversary_path = "{}/ddpg_adversary".format(basedir)
+
+    print('Loading models from {} {}'.format(actor_path, adversary_path))
+    agent.actor.load_state_dict(torch.load(actor_path, map_location=lambda storage, loc: storage))
+    agent.adversary.load_state_dict(torch.load(adversary_path, map_location=lambda storage, loc: storage))

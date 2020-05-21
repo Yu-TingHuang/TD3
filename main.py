@@ -13,15 +13,15 @@ import ast
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
 def eval_policy(policy, env_name, seed, eval_episodes=10):
-    eval_env = gym.make(env_name)    
+    eval_env = gym.make(env_name)
     eval_env.seed(seed + 100)
 
     avg_reward = 0.
     for _ in range(eval_episodes):
-        state, done = eval_env.reset(), False   
+        state, done = eval_env.reset(), False
         while not done:
             action = policy.select_action(np.array(state))
-            state, reward, done, _ = eval_env.step(action) 
+            state, reward, done, _ = eval_env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
 
@@ -63,11 +63,27 @@ if __name__ == "__main__":
     print(f"Policy: {args.policy}, Env: {args.env}, Seed: {args.seed}")
     print("---------------------------------------")
 
-    if not os.path.exists("./results"):
-        os.makedirs("./results")
+    if args.two_player:
+    	base_dir = os.getcwd() + '/models/' + args.env_name + '/'
+    else:
+        base_dir = os.getcwd() + '/models_ˋ400x300/' + args.env_name + '/'
 
-    if args.save_model and not os.path.exists("./models"):
-        os.makedirs("./models")
+    if args.optimizer == 'SGLD':
+        base_dir += args.optimizer + '_thermal_' + str(args.epsilon) + '/'
+    else:
+        base_dir += args.optimizer + '/'
+
+    if args.action_noise:
+        base_dir += 'action_noise_' + str(args.noise_scale) + '/'
+    else:
+        base_dir += 'no_noise/'
+
+	run_number = 0
+    while os.path.exists(base_dir + str(run_number)):
+        run_number += 1
+    base_dir = base_dir + str(run_number)
+
+    os.makedirs(base_dir)
 
     env = gym.make(args.env)
 
@@ -100,15 +116,15 @@ if __name__ == "__main__":
         kwargs["noise_clip"] = args.noise_clip * max_action
         kwargs["policy_freq"] = args.policy_freq
         kwargs["expl_noise"] = args.expl_noise
-   
+
         policy = TD3.TD3(**kwargs)
     elif args.policy == "OurDDPG":
         policy = OurDDPG.DDPG(**kwargs)
     elif args.policy == "DDPG":
         policy = DDPG.DDPG(**kwargs)
 
-    if args.load_model != "": 
-        policy_file = file_name if args.load_model == "default" else args.load_model 
+    if args.load_model != "":
+        policy_file = file_name if args.load_model == "default" else args.load_model
         policy.load(f"./models/{policy_file}")
 
     replay_buffer = utils.ReplayBuffer(state_dim, action_dim)
@@ -123,20 +139,20 @@ if __name__ == "__main__":
 
     for t in range(int(args.max_timesteps)):
         episode_timesteps += 1
-    
+
         # Select action randomly or according to policy
         if t < args.start_timesteps:
             action = env.action_space.sample()
         else:
             action = policy.select_action(np.array(state))
-   
+
         # Perform action
         next_state, reward, done, _ = env.step(action)
         done_bool = float(done) if episode_timesteps < env._max_episode_steps else 0
-   
+
         # Store data in replay buffer
         replay_buffer.add(state, action, next_state, reward, done_bool)
-  
+
         state = next_state
         episode_reward += reward
 
@@ -158,10 +174,10 @@ if __name__ == "__main__":
             episode_reward = 0
             episode_timesteps = 0
             episode_num += 1
-  
+
             # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
             evaluations.append(eval_policy(policy, args.env, args.seed))
-            np.save(f"./results/{file_name}", evaluations)
-            if args.save_model: policy.save(f"./models/{file_name}")
-   
+            np.save(f"./{base_dir}/{results}", evaluations)
+            if args.save_model:
+				save_model(actor=policy.actor, adversary=policy.adversary, basedir=base_dir)

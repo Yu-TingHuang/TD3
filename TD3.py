@@ -17,11 +17,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action):
         super(Actor, self).__init__()
-    
+
         self.l1 = nn.Linear(state_dim, 256)
         self.l2 = nn.Linear(256, 256)
         self.l3 = nn.Linear(256, action_dim)
-    
+
         self.max_action = max_action
     def forward(self, state):
         a = F.relu(self.l1(state))
@@ -32,7 +32,7 @@ class Actor(nn.Module):
 class Critic(nn.Module):
     def __init__(self, state_dim, action_dim):
         super(Critic, self).__init__()
-        
+
         # Q1 architecture
         self.l1 = nn.Linear(state_dim + action_dim, 256)
         self.l2 = nn.Linear(256, 256)
@@ -50,7 +50,7 @@ class Critic(nn.Module):
 
         q2 = F.relu(self.l4(sa))
         q2 = F.relu(self.l5(q2))
-        q2 = self.l6(q2) 
+        q2 = self.l6(q2)
         return q1, q2
 
 
@@ -73,16 +73,16 @@ def sgld_update(target, source, beta):
 class TD3(object):
     def __init__(self,
                 state_dim,
-                action_dim, 
-                max_action, 
+                action_dim,
+                max_action,
                 optimizer,
                 two_player,
-                discount=0.99,      
-                tau=0.005, 
+                discount=0.99,
+                tau=0.005,
                 beta=0.9,
                 alpha=0.1,
                 epsilon=1e-3,
-                policy_noise=0.2, 
+                policy_noise=0.2,
                 noise_clip=0.5,
                 policy_freq=2,
                 expl_noise=0.1):
@@ -115,11 +115,11 @@ class TD3(object):
          self.tau = tau
          self.policy_noise = policy_noise
          self.noise_clip = noise_clip
-         self.policy_freq = policy_freq 
+         self.policy_freq = policy_freq
          self.total_it = 0
 
          self.expl_noise = expl_noise
-         self.action_dim = action_dim 
+         self.action_dim = action_dim
          self.alpha = alpha
          self.beta = beta
          self.optimizer = optimizer
@@ -202,31 +202,31 @@ class TD3(object):
             self.sgld_outer_update()
 
 
-    def save(self, filename):
+    def save(self, base_dir):
         torch.save(self.critic.state_dict(), filename + "_critic")
         torch.save(self.critic_optimizer.state_dict(), filename + "_critic_optimizer")
-        
+
         torch.save(self.actor.state_dict(), filename + "_actor")
         torch.save(self.actor_optimizer.state_dict(), filename + "_actor_optimizer")
-    
-    
+
+
     def load(self, filename):
         self.critic.load_state_dict(torch.load(filename + "_critic"))
         self.critic_optimizer.load_state_dict(torch.load(filename + "_critic_optimizer"))
         self.critic_target = copy.deepcopy(self.critic)
-        
+
         self.actor.load_state_dict(torch.load(filename + "_actor"))
         self.actor_optimizer.load_state_dict(torch.load(filename + "_actor_optimizer"))
         self.actor_target = copy.deepcopy(self.actor)
-    
+
     def sgld_inner_update(self): #target source
         sgld_update(self.actor_bar, self.actor, self.beta)
         sgld_update(self.adversary_bar, self.adversary, self.beta)
- 
+
     def sgld_outer_update(self): #target source
         sgld_update(self.actor_outer, self.actor_bar, self.beta)
         sgld_update(self.adversary_outer, self.adversary_bar, self.beta)
- 
+
     def soft_update(self):
         soft_update(self.actor_target, self.actor, self.tau)
         soft_update(self.adversary_target, self.adversary, self.tau)
