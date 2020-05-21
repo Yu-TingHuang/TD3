@@ -3,7 +3,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch.optim import Adam
+from torch.optim import RMSprop
+from torch.optim import SGLD
+from torch.optim import ExtraAdam
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -18,9 +21,9 @@ class Actor(nn.Module):
 		self.l1 = nn.Linear(state_dim, 256)
 		self.l2 = nn.Linear(256, 256)
 		self.l3 = nn.Linear(256, action_dim)
-		
+
 		self.max_action = max_action
-		
+
 
 	def forward(self, state):
 		a = F.relu(self.l1(state))
@@ -64,6 +67,14 @@ class Critic(nn.Module):
 		q1 = self.l3(q1)
 		return q1
 
+def soft_update(target, source, tau):
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
+
+def sgld_update(target, source, beta):
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(target_param.data * (1.0 - beta) + param.data * beta)
 
 class TD3(object):
 	def __init__(
@@ -71,16 +82,38 @@ class TD3(object):
 		state_dim,
 		action_dim,
 		max_action,
+		optimizer,
+		two_player,
 		discount=0.99,
 		tau=0.005,
+		beta=0.9,
+		alpha=0.1,
 		policy_noise=0.2,
 		noise_clip=0.5,
-		policy_freq=2
+		policy_freq=2,
+		expl_noise=0.1,
+
 	):
 
 		self.actor = Actor(state_dim, action_dim, max_action).to(device)
 		self.actor_target = copy.deepcopy(self.actor)
-		self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
+		self.actor_bar = copy.deepcopy(self.actor)
+		self.actor_outer = copy.deepcopy(self.actor)
+
+		self.adversary = Actor(state_dim, action_dim, max_action).to(device)
+		self.adversary_target = copy.deepcopy(self.actor)
+		self.adversary_bar = copy.deepcopy(self.actor)
+		self.adversary_outer = copy.deepcopy(self.actor)
+
+        if(optimizer == 'SGLD'):
+            self.actor_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
+			self.adversary_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
+        elif(optimizer == 'RMSprop'):
+            self.actor_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
+			self.adversary_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
+        else:
+            self.actor_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
+            self.adversary_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
 
 		self.critic = Critic(state_dim, action_dim).to(device)
 		self.critic_target = copy.deepcopy(self.critic)
@@ -92,19 +125,39 @@ class TD3(object):
 		self.policy_noise = policy_noise
 		self.noise_clip = noise_clip
 		self.policy_freq = policy_freq
-
 		self.total_it = 0
 
+		self.expl_noise = expl_noise
+		self.action_dim = action_dim
+		self.alpha = alpha
+		self.beta = beta
+		self.optimizer = optimizer
+		self.two_player = two_player
 
 	def select_action(self, state):
 		state = torch.FloatTensor(state.reshape(1, -1)).to(device)
-		return self.actor(state).cpu().data.numpy().flatten()
+        if(self.optimizer == 'SGLD' and self.two_player):
+            mu = self.actor_outer(state).cpu().data.numpy().flatten()
+            adv_mu = self.adversary_outer(state).cpu().data.numpy().flatten()
+        else:
+            mu = self.actor(state).cpu().data.numpy().flatten()
+            adv_mu = self.adversary(state).cpu().data.numpy().flatten()
 
+		mu = (mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim))
+			.clip(-self.max_action, self.max_action)
+		adv_mu = (adv_mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim))
+				.clip(-self.max_action, self.max_action)
+		mu = mu * (1 - self.alpha)
+		adv_mu = adv_mu * self.alpha
 
-	def train(self, replay_buffer, batch_size=100):
+		action = mu + adv_mu
+		return action
+
+	def train(self, sgld_outer_update, replay_buffer, batch_size=100):
+
 		self.total_it += 1
 
-		# Sample replay buffer 
+		# Sample replay buffer
 		state, action, next_state, reward, not_done = replay_buffer.sample(batch_size)
 
 		with torch.no_grad():
@@ -112,9 +165,10 @@ class TD3(object):
 			noise = (
 				torch.randn_like(action) * self.policy_noise
 			).clamp(-self.noise_clip, self.noise_clip)
-			
+
 			next_action = (
-				self.actor_target(next_state) + noise
+				(1 - self.alpha) * self.actor_target(next_state) +
+				self.alpha * self.adversary_target(next_state) + noise
 			).clamp(-self.max_action, self.max_action)
 
 			# Compute the target Q value
@@ -135,27 +189,40 @@ class TD3(object):
 
 		# Delayed policy updates
 		if self.total_it % self.policy_freq == 0:
+			with torch.no_grad():
+				if(self.optimizer == 'SGLD' and self.two_player):
+                    actor_action = self.actor_outer(next_state)
+                else:
+                    actor_action = self.actor_target(next_state)
+            action = (1 - self.alpha) * actor_action + self.alpha * self.adversary(next_state)
+			adversary_loss = self.critic.Q1(state, action).mean()
+			self.adversary_optimizer.zero_grad()
+			adversary_loss.backward()
+			self.adversary_optimizer.step()
 
-			# Compute actor losse
-			actor_loss = -self.critic.Q1(state, self.actor(state)).mean()
-			
-			# Optimize the actor 
+			with torch.no_grad():
+				if(self.optimizer == 'SGLD' and self.two_player):
+                    adversary_action = self.adversary_outer(next_state)
+				else:
+					adversary_action = self.adversary_target(next_state)
+            action = (1 - self.alpha) * self.actor(next_state) + self.alpha * adversary_action
+			actor_loss = -self.critic.Q1(state, action).mean()
 			self.actor_optimizer.zero_grad()
 			actor_loss.backward()
 			self.actor_optimizer.step()
 
-			# Update the frozen target models
-			for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
-				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+            if(self.optimizer == 'SGLD' and self.two_player):
+                self.sgld_inner_update()
+            self.soft_update()
 
-			for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
-				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+        if(sgld_outer_update and self.optimizer == 'SGLD' and self.two_player):
+            self.sgld_outer_update()
 
 
 	def save(self, filename):
 		torch.save(self.critic.state_dict(), filename + "_critic")
 		torch.save(self.critic_optimizer.state_dict(), filename + "_critic_optimizer")
-		
+
 		torch.save(self.actor.state_dict(), filename + "_actor")
 		torch.save(self.actor_optimizer.state_dict(), filename + "_actor_optimizer")
 
@@ -168,4 +235,16 @@ class TD3(object):
 		self.actor.load_state_dict(torch.load(filename + "_actor"))
 		self.actor_optimizer.load_state_dict(torch.load(filename + "_actor_optimizer"))
 		self.actor_target = copy.deepcopy(self.actor)
-		
+
+    def sgld_inner_update(self): #target source
+        sgld_update(self.actor_bar, self.actor, self.beta)
+        sgld_update(self.adversary_bar, self.adversary, self.beta)
+
+    def sgld_outer_update(self): #target source
+        sgld_update(self.actor_outer, self.actor_bar, self.beta)
+        sgld_update(self.adversary_outer, self.adversary_bar, self.beta)
+
+    def soft_update(self):
+        soft_update(self.actor_target, self.actor, self.tau)
+        soft_update(self.adversary_target, self.adversary, self.tau)
+        soft_update(self.critic_target, self.critic, self.tau)
