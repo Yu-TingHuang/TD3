@@ -71,23 +71,21 @@ def sgld_update(target, source, beta):
         target_param.data.copy_(target_param.data * (1.0 - beta) + param.data * beta)
 
 class TD3(object):
-	def __init__(
-		self,
-		state_dim,
-		action_dim,
-		max_action,
-		optimizer,
-		two_player,
-		discount=0.99,
-		tau=0.005,
-		beta=0.9,
-		alpha=0.1,
-		policy_noise=0.2,
-		noise_clip=0.5,
-		policy_freq=2,
-		expl_noise=0.1,
-
-	):
+    def __init__(self,
+                state_dim,
+                action_dim, 
+                max_action, 
+                optimizer,
+                two_player,
+                discount=0.99,      
+                tau=0.005, 
+                beta=0.9,
+                alpha=0.1,
+                epsilon=1e-3,
+                policy_noise=0.2, 
+                noise_clip=0.5,
+                policy_freq=2,
+                expl_noise=0.1):
 
          self.actor = Actor(state_dim, action_dim, max_action).to(device)
          self.actor_target = copy.deepcopy(self.actor)
@@ -136,8 +134,8 @@ class TD3(object):
             mu = self.actor(state).cpu().data.numpy().flatten()
             adv_mu = self.adversary(state).cpu().data.numpy().flatten()
 
-        mu = (mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim)).clip(-self.max_action, self.max_action)
-        adv_mu = (adv_mu + np.random.normal(0, max_action * self.expl_noise, size=self.action_dim)).clip(-self.max_action, self.max_action)
+        mu = (mu + np.random.normal(0, self.max_action * self.expl_noise, size=self.action_dim)).clip(-self.max_action, self.max_action)
+        adv_mu = (adv_mu + np.random.normal(0, self.max_action * self.expl_noise, size=self.action_dim)).clip(-self.max_action, self.max_action)
         mu = mu * (1 - self.alpha)
         adv_mu = adv_mu * self.alpha
 

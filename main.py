@@ -86,9 +86,10 @@ if __name__ == "__main__":
         "max_action": max_action,
         "discount": args.discount,
         "tau": args.tau,
+        "epsilon": args.epsilon,
         "alpha": args.alpha,
         "beta": args.beta,
-        "optimizer": args.optimzer,
+        "optimizer": args.optimizer,
         "two_player": args.two_player
     }
 
