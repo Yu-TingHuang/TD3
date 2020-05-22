@@ -93,18 +93,18 @@ class TD3(object):
          self.actor_outer = copy.deepcopy(self.actor)
 
          self.adversary = Actor(state_dim, action_dim, max_action).to(device)
-         self.adversary_target = copy.deepcopy(self.actor)
-         self.adversary_bar = copy.deepcopy(self.actor)
-         self.adversary_outer = copy.deepcopy(self.actor)
+         self.adversary_target = copy.deepcopy(self.adversary)
+         self.adversary_bar = copy.deepcopy(self.adversary)
+         self.adversary_outer = copy.deepcopy(self.adversary)
          if(optimizer == 'SGLD'):
              self.actor_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
-             self.adversary_optimizer = SGLD(self.actor.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
+             self.adversary_optimizer = SGLD(self.adversary.parameters(), lr=1e-4, noise=epsilon, alpha=0.999)
          elif(optimizer == 'RMSprop'):
              self.actor_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
-             self.adversary_optimizer = RMSprop(self.actor.parameters(), lr=1e-4, alpha=0.999)
+             self.adversary_optimizer = RMSprop(self.adversary.parameters(), lr=1e-4, alpha=0.999)
          else:
              self.actor_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
-             self.adversary_optimizer = ExtraAdam(self.actor.parameters(), lr=1e-4)
+             self.adversary_optimizer = ExtraAdam(self.adversary.parameters(), lr=1e-4)
 
          self.critic = Critic(state_dim, action_dim).to(device)
          self.critic_target = copy.deepcopy(self.critic)
