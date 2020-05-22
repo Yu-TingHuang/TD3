@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     base_dir += 'action_noise_' + str(args.expl_noise) + '/'
 
-	base_dir += 'alpha_' + str(alpha) + '/'
+    base_dir += 'alpha_' + str(args.alpha) + '/'
 
     run_number = 0
     while os.path.exists(base_dir + str(run_number)):
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         kwargs["noise_clip"] = args.noise_clip * max_action
         kwargs["policy_freq"] = args.policy_freq
         kwargs["expl_noise"] = args.expl_noise
-
+    #    print(args.expl_noise)
         policy = TD3.TD3(**kwargs)
     elif args.policy == "OurDDPG":
         policy = OurDDPG.DDPG(**kwargs)
@@ -162,7 +162,7 @@ if __name__ == "__main__":
             if (args.optimizer == 'SGLD' and args.two_player):
                 kt = np.minimum(15, warmup)
             else:
-                Kt = 1
+                kt = 1
             for k in range(kt):
                sgld_outer_update = (k == kt - 1)
                policy.train(sgld_outer_update, replay_buffer, args.batch_size)
@@ -178,6 +178,6 @@ if __name__ == "__main__":
             # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
             evaluations.append(eval_policy(policy, args.env, args.seed))
-            np.save(f"./{base_dir}/results", evaluations)
+            np.save(f"{base_dir}/results", evaluations)
             if args.save_model:
-                save_model(actor=policy.actor, adversary=policy.adversary, basedir=base_dir)
+                utils.save_model(actor=policy.actor, adversary=policy.adversary, basedir=base_dir)

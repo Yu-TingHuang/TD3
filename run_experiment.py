@@ -33,19 +33,19 @@ if(args.two_player):
 else:
     p = 'nr_mdp_0_1'
 
-for s in range(0):
+for s in range(1):
     for env in args.env:
         for thermal_noise in (args.thermal_noise):
             for expl_noise in (args.expl_noise):
                 folder_name = f'{env}'
                 if (args.optimizer == ["SGLD"]):
-                    experiment = f'SGLD_thermal_{thermal_noise}/action_{action_noise_scale}'
+                    experiment = f'SGLD_thermal_{thermal_noise}/action_{expl_noise}'
                     optimizer = 'SGLD'
                 elif(args.optimizer == ['RMSprop']):
-                    experiment = f'RMSprop/action_{action_noise_scale}'
+                    experiment = f'RMSprop/action_{expl_noise}'
                     optimizer = 'RMSprop'
                 else:
-                    experiment = f'ExtraAdam/action_{action_noise_scale}'
+                    experiment = f'ExtraAdam/action_{expl_noise}'
                     optimizer = 'ExtraAdam'
                 path = f'{folder_name}/{experiment}/{p}/{s}'
 
@@ -54,7 +54,7 @@ for s in range(0):
 
                 print(path)
 
-                command = f'python3.6 main.py --env-name {env} --optimizer {optimizer} --epsilon {thermal_noise} --expl_noise {expl_noise} --two_player {args.two_player} --alpha {args.alpha}'
+                command = f'python3.6 main.py --save_model --env {env} --optimizer {optimizer} --epsilon {thermal_noise} --two_player {args.two_player} --alpha {args.alpha}'
 
                 experiment_path = f'{args.logs_folder}/{path}/command.txt'
 
