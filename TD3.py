@@ -174,10 +174,10 @@ class TD3(object):
         if self.total_it % self.policy_freq == 0:
             with torch.no_grad():
                 if(self.optimizer == 'SGLD' and self.two_player):
-                    actor_action = self.actor_outer(next_state)
+                    actor_action = self.actor_outer(state)
                 else:
-                    actor_action = self.actor_target(next_state)
-            action = (1 - self.alpha) * actor_action + self.alpha * self.adversary(next_state)
+                    actor_action = self.actor_target(state)
+            action = (1 - self.alpha) * actor_action + self.alpha * self.adversary(state)
             adversary_loss = self.critic.Q1(state, action).mean()
             self.adversary_optimizer.zero_grad()
             adversary_loss.backward()
@@ -185,10 +185,10 @@ class TD3(object):
 
             with torch.no_grad():
                 if(self.optimizer == 'SGLD' and self.two_player):
-                    adversary_action = self.adversary_outer(next_state)
+                    adversary_action = self.adversary_outer(state)
                 else:
-                    adversary_action = self.adversary_target(next_state)
-            action = (1 - self.alpha) * self.actor(next_state) + self.alpha * adversary_action
+                    adversary_action = self.adversary_target(state)
+            action = (1 - self.alpha) * self.actor(state) + self.alpha * adversary_action
             actor_loss = -self.critic.Q1(state, action).mean()
             self.actor_optimizer.zero_grad()
             actor_loss.backward()
