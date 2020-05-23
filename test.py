@@ -9,8 +9,7 @@ import random
 import torch
 from torch.distributions import uniform
 
-from ddpg import DDPG
-from normalized_actions import NormalizedActions
+from TD3 import TD3
 from utils import load_model
 import ast
 
@@ -41,16 +40,16 @@ else:
 def eval_model(_env, alpha):
     total_reward = 0
     with torch.no_grad():
-        state = agent.Tensor([_env.reset()])
+        state = torch.Tensor([_env.reset()])
         while True:
-            action = agent.select_action(state, mdp_type='mdp')
+            action = agent.select_action(np.array(state))
             if random.random() < alpha:
                 action = noise.sample(action.shape).view(action.shape)
 
-            state, reward, done, _ = _env.step(action.cpu().numpy()[0])
+            state, reward, done, _ = _env.step(action)
             total_reward += reward
 
-            state = agent.Tensor([state])
+            #state = torch.Tensor([state])
             if done:
                 break
     return total_reward
@@ -59,26 +58,26 @@ def eval_model(_env, alpha):
 test_episodes = 100
 for env_name in [args.env]:#os.listdir(base_dir):
 
-    env = NormalizedActions(gym.make(env_name))
+    env = gym.make(env_name)
     agent = TD3(state_dim = env.observation_space.shape[0],
                 action_dim = env.action_space.shape[0],
-                max_action = float(env.action_space.high[0],
+                max_action = float(env.action_space.high[0]),
                 optimizer = 0,
                 two_player = args.two_player,
                 discount=0.99,
                 tau=0.005,
                 beta=0.9,
-                alpha=0.1,
+                alpha=0,
                 epsilon=0,
-                policy_noise=0.2,
-                noise_clip=0.5,
+                policy_noise=0,
+                noise_clip=0,
                 policy_freq=2,
                 expl_noise=0)
 
     noise = uniform.Uniform(torch.Tensor([-1.0]), torch.Tensor([1.0]))
 
-    basic_bm = copy.deepcopy(env.env.env.model.body_mass.copy())
-    basic_friction = copy.deepcopy(env.env.env.model.geom_friction.copy())
+    basic_bm = copy.deepcopy(env.env.model.body_mass.copy())
+    basic_friction = copy.deepcopy(env.env.model.geom_friction.copy())
 
     env_dir = base_dir + env_name + '/'
     for optimizer in [args.optimizer]: #['RMSprop', 'SGLD_thermal_0.01', 'SGLD_thermal_0.001', 'SGLD_thermal_0.0001', 'SGLD_thermal_1e-05']:
@@ -96,7 +95,7 @@ for env_name in [args.env]:#os.listdir(base_dir):
              # 		and not os.path.isfile(noise_dir + subdir + '/results_' + args.eval_type):
                         while os.path.exists(dir):
                             load_model(agent=agent, basedir=dir)
-                            agent.eval()
+                           # agent.eval()
 
                             if 'model_noise' in args.eval_type:
                                 test_episodes = 10
@@ -108,7 +107,7 @@ for env_name in [args.env]:#os.listdir(base_dir):
                                             results[mass][alpha] = []
                                         for _ in range(test_episodes):
                                             for idx in range(len(basic_bm)):
-                                                env.env.env.model.body_mass[idx] = basic_bm[idx] * mass
+                                                env.env.model.body_mass[idx] = basic_bm[idx] * mass
                                             r = eval_model(env, alpha)
                                             results[mass][alpha].append(r)
 
@@ -122,7 +121,7 @@ for env_name in [args.env]:#os.listdir(base_dir):
                                             results[friction][alpha] = []
                                         for _ in range(test_episodes):
                                             for idx in range(len(basic_friction)):
-                                                env.env.env.model.geom_friction[idx] = basic_friction[idx] * friction
+                                                env.env.model.geom_friction[idx] = basic_friction[idx] * friction
                                             r = eval_model(env, alpha)
                                             results[friction][alpha].append(r)
 
@@ -136,9 +135,9 @@ for env_name in [args.env]:#os.listdir(base_dir):
                                             results[friction][mass] = []
                                         for _ in range(test_episodes):
                                             for idx in range(len(basic_friction)):
-                                                env.env.env.model.geom_friction[idx] = basic_friction[idx] * friction
+                                                env.env.model.geom_friction[idx] = basic_friction[idx] * friction
                                             for idx in range(len(basic_bm)):
-                                                env.env.env.model.body_mass[idx] = basic_bm[idx] * mass
+                                                env.env.model.body_mass[idx] = basic_bm[idx] * mass
                                             r = eval_model(env, 0)
                                             results[friction][mass].append(r)
 
@@ -148,7 +147,7 @@ for env_name in [args.env]:#os.listdir(base_dir):
                                         results[mass] = []
                                     for _ in range(test_episodes):
                                         for idx in range(len(basic_bm)):
-                                            env.env.env.model.body_mass[idx] = basic_bm[idx] * mass
+                                            env.env.model.body_mass[idx] = basic_bm[idx] * mass
                                         r = eval_model(env, 0)
                                         results[mass].append(r)
                             elif 'friction' in args.eval_type:
@@ -157,7 +156,7 @@ for env_name in [args.env]:#os.listdir(base_dir):
                                         results[friction] = []
                                     for _ in range(test_episodes):
                                         for idx in range(len(basic_friction)):
-                                            env.env.env.model.geom_friction[idx] = basic_friction[idx] * friction
+                                            env.env.model.geom_friction[idx] = basic_friction[idx] * friction
                                         r = eval_model(env, 0)
                                         results[friction].append(r)
                             else:
