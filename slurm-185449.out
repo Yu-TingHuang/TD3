@@ -736,4 +736,6 @@ Total T: 456000 Episode Num: 456 Episode T: 1000 Reward: 4197.896
 Total T: 457000 Episode Num: 457 Episode T: 1000 Reward: 4171.075
 Total T: 458000 Episode Num: 458 Episode T: 1000 Reward: 4158.276
 Total T: 459000 Episode Num: 459 Episode T: 1000 Reward: 4265.589
-Total T: 460000 Episode Num: 460 Episode T: 1000 Reward: 4152.917
+Total T: 460000 Episode Num: 460 Episode T: 1000 Reward: 4152.917srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: *** JOB 185449 CANCELLED AT 2020-05-24T08:17:46 DUE TO TIME LIMIT on simba-compute-02 ***
+slurmstepd: *** STEP 185449.0 CANCELLED AT 2020-05-24T08:17:46 DUE TO TIME LIMIT on simba-compute-02 ***

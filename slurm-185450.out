@@ -1176,4 +1176,6 @@ Total T: 731000 Episode Num: 731 Episode T: 1000 Reward: 7279.537
 Total T: 732000 Episode Num: 732 Episode T: 1000 Reward: 7164.054
 Total T: 733000 Episode Num: 733 Episode T: 1000 Reward: 7289.495
 Total T: 734000 Episode Num: 734 Episode T: 1000 Reward: 7233.563
-Total T: 735000 Episode Num: 735 Episode T: 1000 Reward: 7287.136
+Total T: 735000 Episode Num: 735 Episode T: 1000 Reward: 7287.136slurmstepd: *** JOB 185450 CANCELLED AT 2020-05-24T08:17:46 DUE TO TIME LIMIT on simba-compute-03 ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: *** STEP 185450.0 CANCELLED AT 2020-05-24T08:17:46 DUE TO TIME LIMIT on simba-compute-03 ***
