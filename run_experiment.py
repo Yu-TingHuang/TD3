@@ -54,7 +54,7 @@ for s in range(1):
 
                 print(path)
 
-                command = f'python3.6 main.py --save_model --env {env} --expl_noise {expl_noise} --optimizer {optimizer} --epsilon {thermal_noise} --two_player {args.two_player} --alpha {args.alpha}'
+                command = f'python3.6 main.py --save_model --env {env} --expl_noise {expl_noise} --optimizer {optimizer} --epsilon {thermal_noise} --two_player {args.two_player} --alpha {args.alpha} --seed {s}'
 
                 experiment_path = f'{args.logs_folder}/{path}/command.txt'
 
