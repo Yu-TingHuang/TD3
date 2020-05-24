@@ -33,7 +33,7 @@ if(args.two_player):
 else:
     p = 'nr_mdp_0_1'
 
-for s in range(1, 2):
+for s in range(2):
     for env in args.env:
         for thermal_noise in (args.thermal_noise):
             for expl_noise in (args.expl_noise):

@@ -149,4 +149,6 @@ Total T: 90000 Episode Num: 90 Episode T: 1000 Reward: 4314.848
 Evaluation over 10 episodes: 4292.402
 ---------------------------------------
 Total T: 91000 Episode Num: 91 Episode T: 1000 Reward: 4177.603
-Total T: 92000 Episode Num: 92 Episode T: 1000 Reward: 4274.028
+Total T: 92000 Episode Num: 92 Episode T: 1000 Reward: 4274.028srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: *** JOB 186015 CANCELLED AT 2020-05-24T08:53:22 *** on simba-compute-11
+slurmstepd: *** STEP 186015.0 CANCELLED AT 2020-05-24T08:53:22 *** on simba-compute-11

@@ -444,4 +444,6 @@ Total T: 275000 Episode Num: 275 Episode T: 1000 Reward: 6352.084
 ---------------------------------------
 Evaluation over 10 episodes: 6307.585
 ---------------------------------------
-Total T: 276000 Episode Num: 276 Episode T: 1000 Reward: 6419.738
+Total T: 276000 Episode Num: 276 Episode T: 1000 Reward: 6419.738srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: *** JOB 185976 CANCELLED AT 2020-05-24T08:53:46 *** on simba-compute-06
+slurmstepd: *** STEP 185976.0 CANCELLED AT 2020-05-24T08:53:46 *** on simba-compute-06

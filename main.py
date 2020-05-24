@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print("---------------------------------------")
 
     if args.two_player:
-    	base_dir = os.getcwd() + '/models_TwoPlayer/' + args.env + '/'
+    	base_dir = os.getcwd() + '/models_TwoPlayer_2/' + args.env + '/'
     else:
         base_dir = os.getcwd() + '/models_OnePlayer/' + args.env + '/'
 
