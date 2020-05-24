@@ -33,7 +33,7 @@ if(args.two_player):
 else:
     p = 'nr_mdp_0_1'
 
-for s in range(2):
+for s in range(1):
     for env in args.env:
         for thermal_noise in (args.thermal_noise):
             for expl_noise in (args.expl_noise):
@@ -47,7 +47,7 @@ for s in range(2):
                 else:
                     experiment = f'ExtraAdam/action_{expl_noise}'
                     optimizer = 'ExtraAdam'
-                path = f'{folder_name}/{experiment}/{p}/{s}'
+                path = f'{folder_name}/{experiment}/alpha_{args.alpha}/{s}'
 
                 if not os.path.isdir(f'{args.logs_folder}/{path}'):
                         os.makedirs(f'{args.logs_folder}/{path}')
