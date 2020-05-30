@@ -1,0 +1,12 @@
+usage: main.py [-h] [--policy POLICY] [--env ENV] [--seed SEED]
+               [--start_timesteps START_TIMESTEPS] [--eval_freq EVAL_FREQ]
+               [--max_timesteps MAX_TIMESTEPS] [--expl_noise EXPL_NOISE]
+               [--batch_size BATCH_SIZE] [--discount DISCOUNT] [--tau TAU]
+               [--policy_noise POLICY_NOISE] [--noise_clip NOISE_CLIP]
+               [--policy_freq POLICY_FREQ] [--save_model]
+               [--load_model LOAD_MODEL] [--epsilon EPSILON] [--alpha ALPHA]
+               [--learning_rate LEARNING_RATE] [--beta BETA]
+               [--optimizer {SGLD,RMSprop,ExtraAdam}]
+               [--two_player TWO_PLAYER]
+main.py: error: argument --max_timesteps: invalid int value: '2e5'
+srun: error: simba-compute-02: task 0: Exited with exit code 2

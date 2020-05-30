@@ -28,11 +28,6 @@ if not os.path.isfile(args.script_name):
 
 ./staskfarm ${{1}}\n''')
 
-if(args.two_player):
-    p = 'nr_mdp_0.1_1'
-else:
-    p = 'nr_mdp_0_1'
-
 for s in range(1):
     for env in args.env:
         for thermal_noise in (args.thermal_noise):
