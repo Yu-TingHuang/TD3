@@ -2928,4 +2928,6 @@ Total T: 145645 Episode Num: 2834 Episode T: 111 Reward: 575.234
 Total T: 145734 Episode Num: 2835 Episode T: 89 Reward: 451.594
 Total T: 145873 Episode Num: 2836 Episode T: 139 Reward: 607.149
 Total T: 146001 Episode Num: 2837 Episode T: 128 Reward: 636.824
-Total T: 146128 Episode Num: 2838 Episode T: 127 Reward: 618.957
+Total T: 146128 Episode Num: 2838 Episode T: 127 Reward: 618.957srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: *** JOB 187884 CANCELLED AT 2020-06-05T02:13:08 *** on simba-compute-04
+slurmstepd: *** STEP 187884.0 CANCELLED AT 2020-06-05T02:13:08 *** on simba-compute-04

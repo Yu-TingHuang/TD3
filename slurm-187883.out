@@ -3458,4 +3458,6 @@ Total T: 160086 Episode Num: 3355 Episode T: 93 Reward: 464.808
 Total T: 160171 Episode Num: 3356 Episode T: 85 Reward: 435.682
 Total T: 160257 Episode Num: 3357 Episode T: 86 Reward: 458.024
 Total T: 160334 Episode Num: 3358 Episode T: 77 Reward: 385.935
-Total T: 160406 Episode Num: 3359 Episode T: 72 Reward: 362.982
+Total T: 160406 Episode Num: 3359 Episode T: 72 Reward: 362.982srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: *** JOB 187883 CANCELLED AT 2020-06-05T02:13:08 *** on simba-compute-03
+slurmstepd: *** STEP 187883.0 CANCELLED AT 2020-06-05T02:13:08 *** on simba-compute-03
