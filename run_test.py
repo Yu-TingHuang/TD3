@@ -30,7 +30,7 @@ for env in args.env:
     for model_type in ["model", "friction"]:#, "model_friction", "friction_noise", "model_noise"]:
         for twoPlayer in args.two_player:
             if(twoPlayer == "True"):
-                alpha = 0.2
+                alpha = 0.1
             else:
                 alpha = 0.0
             for optimizer in args.optimizer:
