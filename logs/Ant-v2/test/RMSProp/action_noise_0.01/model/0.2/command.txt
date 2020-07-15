@@ -1,0 +1,1 @@
+python3.6 test.py --env Ant-v2 --eval_type model --optimizer RMSProp --action_noise action_noise_0.01 --alpha 0.2 --two_player True 
